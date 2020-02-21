@@ -3,7 +3,7 @@
 //  stl_extension
 //
 //  Created by Kingle Zhuang on 11/20/19.
-//  Copyright © 2019 MZD. All rights reserved.
+//  Copyright © 2019 RingCentral. All rights reserved.
 //
 
 #pragma once
@@ -32,22 +32,7 @@ namespace std
         typedef _Allocator                               allocator_type;
         typedef value_type&                              reference;
         typedef const value_type&                        const_reference;
-    
-        class value_compare
-        : public std::binary_function<value_type, value_type, bool>
-        {
-            friend class threadsafe_map;
-        
-        protected:
-            key_compare __comp_;
-        
-            value_compare(key_compare __c) : __comp_(__c) {}
-        
-        public:
-            bool operator()(const value_type& __x, const value_type& __y) const
-            { return __comp_(__x.first, __y.first); }
-        };
-    
+
     private:
         typedef std::map<key_type, mapped_type, key_compare, allocator_type> __map_type;
     
@@ -55,6 +40,7 @@ namespace std
         __map_type __internal_map_;
     
     public:
+        typedef          __map_type                         map_type;
         typedef typename __map_type::pointer                pointer;
         typedef typename __map_type::const_pointer          const_pointer;
         typedef typename __map_type::size_type              size_type;
@@ -66,8 +52,8 @@ namespace std
     
     public:
         threadsafe_map() : __internal_map_() {}
-        threadsafe_map(const __map_type& __m) : __internal_map_(__m) {}
-        threadsafe_map(__map_type&& __m) : __internal_map_(std::move(__m)) {}
+        threadsafe_map(const map_type& __m) : __internal_map_(__m) {}
+        threadsafe_map(map_type&& __m) : __internal_map_(std::move(__m)) {}
         threadsafe_map(initializer_list<value_type> __il) : __internal_map_(__il) {}
     
         template <class _InputIterator>
@@ -90,17 +76,55 @@ namespace std
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.size();
         }
-    
-        bool insert(const key_type& __k, const mapped_type& __v)
+        
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_map_.max_size();
+        }
+        
+        void operator=(const map_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            return __internal_map_.insert(std::make_pair(__k, __v)).second;
+            __internal_map_ = __v;
+        }
+        
+        void operator=(initializer_list<map_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_map_ = __il;
+        }
+        
+        map_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_map_;
+        }
+        
+        template <class... _Args>
+        bool emplace(_Args&&... __args)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_map_.emplace(std::forward<_Args>(__args)...).second;
+        }
+    
+        bool insert(const value_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_map_.insert(__v).second;
         }
     
         void insert(initializer_list<value_type> __il)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
             __internal_map_.insert(__il);
+        }
+        
+        template <class _InputIterator>
+        void insert(_InputIterator __f, _InputIterator __l)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_map_.insert(__f, __l);
         }
     
         const mapped_type& operator[](const key_type& __k)
@@ -181,21 +205,6 @@ namespace std
         typedef value_type&                              reference;
         typedef const value_type&                        const_reference;
     
-        class value_compare
-        : public std::binary_function<value_type, value_type, bool>
-        {
-            friend class threadsafe_multimap;
-            
-        protected:
-            key_compare __comp_;
-            
-            value_compare(key_compare __c) : __comp_(__c) {}
-            
-        public:
-            bool operator()(const value_type& __x, const value_type& __y) const
-            { return __comp_(__x.first, __y.first); }
-        };
-    
     private:
         typedef std::multimap<key_type, mapped_type, key_compare, allocator_type> __map_type;
     
@@ -203,6 +212,7 @@ namespace std
         __map_type __internal_map_;
     
     public:
+        typedef          __map_type                         map_type;
         typedef typename __map_type::pointer                pointer;
         typedef typename __map_type::const_pointer          const_pointer;
         typedef typename __map_type::size_type              size_type;
@@ -214,8 +224,8 @@ namespace std
         
     public:
         threadsafe_multimap() : __internal_map_() {}
-        threadsafe_multimap(const __map_type& __m) : __internal_map_(__m) {}
-        threadsafe_multimap(__map_type&& __m) : __internal_map_(std::move(__m)) {}
+        threadsafe_multimap(const map_type& __m) : __internal_map_(__m) {}
+        threadsafe_multimap(map_type&& __m) : __internal_map_(std::move(__m)) {}
         threadsafe_multimap(initializer_list<value_type> __il) : __internal_map_(__il) {}
         
         template <class _InputIterator>
@@ -239,16 +249,54 @@ namespace std
             return __internal_map_.size();
         }
         
-        void insert(const key_type& __k, const mapped_type& __v)
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_map_.max_size();
+        }
+        
+        void operator=(const map_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            __internal_map_.insert(std::make_pair(__k, __v));
+            __internal_map_ = __v;
+        }
+        
+        void operator=(initializer_list<map_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_map_ = __il;
+        }
+        
+        map_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_map_;
+        }
+        
+        template <class... _Args>
+        void emplace(_Args&&... __args)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_map_.emplace(std::forward<_Args>(__args)...);
+        }
+        
+        void insert(const value_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_map_.insert(__v);
         }
     
         void insert(initializer_list<value_type> __il)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
             __internal_map_.insert(__il);
+        }
+        
+        template <class _InputIterator>
+        void insert(_InputIterator __f, _InputIterator __l)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_map_.insert(__f, __l);
         }
         
         const std::pair<const mapped_type, bool> get(const key_type& __k)

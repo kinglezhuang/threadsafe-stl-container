@@ -3,7 +3,7 @@
 //  stl_extension
 //
 //  Created by Kingle Zhuang on 11/20/19.
-//  Copyright © 2019 MZD. All rights reserved.
+//  Copyright © 2019 RingCentral. All rights reserved.
 //
 
 #pragma once
@@ -31,6 +31,7 @@ namespace std
         typedef _Tp                                             value_type;
         typedef _Allocator                                      allocator_type;
         
+        typedef          __deque_type                           deque_type;
         typedef typename __deque_type::reference                reference;
         typedef typename __deque_type::const_reference          const_reference;
         typedef typename __deque_type::size_type                size_type;
@@ -46,8 +47,8 @@ namespace std
         threadsafe_deque() : __internal_queue_() {}
         explicit threadsafe_deque(size_type __n) : __internal_queue_(__n) {}
         threadsafe_deque(size_type __n, const value_type& __v) : __internal_queue_(__n, __v) {}
-        threadsafe_deque(const __deque_type& __l) : __internal_queue_(__l) {}
-        threadsafe_deque(__deque_type&& __l) : __internal_queue_(std::move(__l)) {}
+        threadsafe_deque(const deque_type& __l) : __internal_queue_(__l) {}
+        threadsafe_deque(deque_type&& __l) : __internal_queue_(std::move(__l)) {}
         threadsafe_deque(initializer_list<value_type> __il) : __internal_queue_(__il) {}
         
         template <class _InputIterator>
@@ -88,6 +89,12 @@ namespace std
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_queue_.size();
+        }
+        
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_queue_.max_size();
         }
         
         void resize(size_type __n)
@@ -168,6 +175,24 @@ namespace std
             __internal_queue_[__n] = __v;
         }
         
+        void operator=(const deque_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_queue_ = __v;
+        }
+        
+        void operator=(initializer_list<deque_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_queue_ = __il;
+        }
+        
+        deque_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_queue_;
+        }
+        
         void erase(std::function<bool(const value_type&)> __comp)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
@@ -199,60 +224,41 @@ namespace std
             return std::make_pair(value_type(), false);
         }
         
-        template <typename _Predicate>
-        bool insert(_Predicate __pred, const value_type& __v)
+        void insert(std::function<const_iterator(const deque_type&)> __pos, const value_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_queue_.begin(), __internal_queue_.end(), __pred);
-            if (it != __internal_queue_.end())
-            {
-                __internal_queue_.insert(it, __v);
-                return true;
-            }
             
-            return false;
+            const_iterator pos = __pos(__internal_queue_);
+            
+            __internal_queue_.insert(pos, __v);
         }
         
-        template <typename _Predicate>
-        bool insert(_Predicate __pred, size_type __n, const value_type& __v)
+        void insert(std::function<const_iterator(const deque_type&)> __pos, size_type __n, const value_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_queue_.begin(), __internal_queue_.end(), __pred);
-            if (it != __internal_queue_.end())
-            {
-                __internal_queue_.insert(it, __n, __v);
-                return true;
-            }
             
-            return false;
+            const_iterator pos = __pos(__internal_queue_);
+            
+            __internal_queue_.insert(pos, __n, __v);
         }
         
-        template <typename _Predicate, typename _InputIterator>
-        bool insert(_Predicate __pred, _InputIterator __f, _InputIterator __l)
+        template <class _InputIterator>
+        void insert(std::function<const_iterator(const deque_type&)> __pos, _InputIterator __f, _InputIterator __l)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_queue_.begin(), __internal_queue_.end(), __pred);
-            if (it != __internal_queue_.end())
-            {
-                __internal_queue_.insert(it, __f, __l);
-                return true;
-            }
             
-            return false;
+            const_iterator pos = __pos(__internal_queue_);
+            
+            __internal_queue_.insert(pos, __f, __l);
         }
         
-        template <typename _Predicate>
-        bool insert(_Predicate __pred, initializer_list<value_type> __il)
+        void insert(std::function<const_iterator(const deque_type&)> __pos, initializer_list<value_type> __il)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_queue_.begin(), __internal_queue_.end(), __pred);
-            if (it != __internal_queue_.end())
-            {
-                __internal_queue_.insert(it, __il);
-                return true;
-            }
             
-            return false;
+            const_iterator pos = __pos(__internal_queue_);
+            
+            __internal_queue_.insert(pos, __il);
         }
         
         void for_each(std::function<void(const value_type&)> __bl)

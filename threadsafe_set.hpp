@@ -3,7 +3,7 @@
 //  stl_extension
 //
 //  Created by Kingle Zhuang on 11/20/19.
-//  Copyright © 2019 MZD. All rights reserved.
+//  Copyright © 2019 RingCentral. All rights reserved.
 //
 
 #pragma once
@@ -40,6 +40,7 @@ namespace std
         __set_type __internal_set_;
         
     public:
+        typedef          __set_type                         set_type;
         typedef typename __set_type::pointer                pointer;
         typedef typename __set_type::const_pointer          const_pointer;
         typedef typename __set_type::size_type              size_type;
@@ -51,8 +52,8 @@ namespace std
         
     public:
         threadsafe_set() : __internal_set_() {}
-        threadsafe_set(const __set_type& __s) : __internal_set_(__s) {}
-        threadsafe_set(__set_type&& __s) : __internal_set_(std::move(__s)) {}
+        threadsafe_set(const set_type& __s) : __internal_set_(__s) {}
+        threadsafe_set(set_type&& __s) : __internal_set_(std::move(__s)) {}
         threadsafe_set(initializer_list<value_type> __il) : __internal_set_(__il) {}
         
         template <class _InputIterator>
@@ -76,6 +77,73 @@ namespace std
             return __internal_set_.size();
         }
         
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_set_.max_size();
+        }
+        
+        void operator=(const set_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_ = __v;
+        }
+        
+        void operator=(initializer_list<set_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_ = __il;
+        }
+        
+        set_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_set_;
+        }
+        
+        set_type set_intersection(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_intersection(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        set_type set_union(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_union(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        set_type set_different(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_difference(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        set_type set_symmetric_difference(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_symmetric_difference(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        template <class... _Args>
+        bool emplace(_Args&&... __args)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_set_.emplace(std::forward<_Args>(__args)...).second;
+        }
+        
         bool insert(const value_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
@@ -86,6 +154,13 @@ namespace std
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
             __internal_set_.insert(__il);
+        }
+        
+        template <class _InputIterator>
+        void insert(_InputIterator __f, _InputIterator __l)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_.insert(__f, __l);
         }
         
         const std::pair<const value_type, bool> get(const key_type& __k)
@@ -155,6 +230,7 @@ namespace std
         __set_type __internal_set_;
         
     public:
+        typedef          __set_type                         set_type;
         typedef typename __set_type::pointer                pointer;
         typedef typename __set_type::const_pointer          const_pointer;
         typedef typename __set_type::size_type              size_type;
@@ -166,8 +242,8 @@ namespace std
         
     public:
         threadsafe_multiset() : __internal_set_() {}
-        threadsafe_multiset(const __set_type& __s) : __internal_set_(__s) {}
-        threadsafe_multiset(__set_type&& __s) : __internal_set_(std::move(__s)) {}
+        threadsafe_multiset(const set_type& __s) : __internal_set_(__s) {}
+        threadsafe_multiset(set_type&& __s) : __internal_set_(std::move(__s)) {}
         threadsafe_multiset(initializer_list<value_type> __il) : __internal_set_(__il) {}
         
         template <class _InputIterator>
@@ -191,6 +267,73 @@ namespace std
             return __internal_set_.size();
         }
         
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_set_.max_size();
+        }
+        
+        void operator=(const set_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_ = __v;
+        }
+        
+        void operator=(initializer_list<set_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_ = __il;
+        }
+        
+        set_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_set_;
+        }
+        
+        set_type set_intersection(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_intersection(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        set_type set_union(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_union(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        set_type set_different(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_difference(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        set_type set_symmetric_difference(const set_type& s)
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            set_type r;
+            std::set_symmetric_difference(__internal_set_.begin(), __internal_set_.end(), s.begin(), s.end(), std::inserter(r, r.begin()));
+            return r;
+        }
+        
+        template <class... _Args>
+        void emplace(_Args&&... __args)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_.emplace(std::forward<_Args>(__args)...);
+        }
+        
         void insert(const value_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
@@ -201,6 +344,13 @@ namespace std
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
             __internal_set_.insert(__il);
+        }
+        
+        template <class _InputIterator>
+        void insert(_InputIterator __f, _InputIterator __l)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_set_.insert(__f, __l);
         }
         
         const std::pair<const value_type, bool> get(const key_type& __k)

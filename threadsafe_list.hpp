@@ -3,7 +3,7 @@
 //  stl_extension
 //
 //  Created by Kingle Zhuang on 11/20/19.
-//  Copyright © 2019 MZD. All rights reserved.
+//  Copyright © 2019 RingCentral. All rights reserved.
 //
 
 #pragma once
@@ -31,6 +31,7 @@ namespace std
         typedef _Tp                                             value_type;
         typedef _Allocator                                      allocator_type;
         
+        typedef          __list_type                            list_type;
         typedef typename __list_type::reference                 reference;
         typedef typename __list_type::const_reference           const_reference;
         typedef typename __list_type::size_type                 size_type;
@@ -46,8 +47,8 @@ namespace std
         threadsafe_list() : __internal_list_() {}
         explicit threadsafe_list(size_type __n) : __internal_list_(__n) {}
         threadsafe_list(size_type __n, const value_type& __v) : __internal_list_(__n, __v) {}
-        threadsafe_list(const __list_type& __l) : __internal_list_(__l) {}
-        threadsafe_list(__list_type&& __l) : __internal_list_(std::move(__l)) {}
+        threadsafe_list(const list_type& __l) : __internal_list_(__l) {}
+        threadsafe_list(list_type&& __l) : __internal_list_(std::move(__l)) {}
         threadsafe_list(initializer_list<value_type> __il) : __internal_list_(__il) {}
         
         template <class _InputIterator>
@@ -90,6 +91,12 @@ namespace std
             return __internal_list_.size();
         }
         
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_list_.max_size();
+        }
+        
         void resize(size_type __n)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
@@ -100,6 +107,24 @@ namespace std
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
             __internal_list_.resize(__n, __v);
+        }
+        
+        void operator=(const list_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_list_ = __v;
+        }
+        
+        void operator=(initializer_list<list_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_list_ = __il;
+        }
+        
+        list_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_list_;
         }
 
         const value_type& front()
@@ -151,10 +176,10 @@ namespace std
         }
         
         template <class Pred>
-        void remove_if(Pred __p)
+        void remove_if(Pred __pred)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            __internal_list_.remove_if(__p);
+            __internal_list_.remove_if(__pred);
         }
         
         void erase(std::function<bool(const value_type&)> __comp)
@@ -187,60 +212,41 @@ namespace std
             return std::make_pair(value_type(), false);
         }
         
-        template <typename _Predicate>
-        bool insert(_Predicate __pred, const value_type& __v)
+        void insert(std::function<const_iterator(const list_type&)> __pos, const value_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_list_.begin(), __internal_list_.end(), __pred);
-            if (it != __internal_list_.end())
-            {
-                __internal_list_.insert(it, __v);
-                return true;
-            }
             
-            return false;
-        }
-
-        template <typename _Predicate>
-        bool insert(_Predicate __pred, size_type __n, const value_type& __v)
-        {
-            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_list_.begin(), __internal_list_.end(), __pred);
-            if (it != __internal_list_.end())
-            {
-                __internal_list_.insert(it, __n, __v);
-                return true;
-            }
+            const_iterator pos = __pos(__internal_list_);
             
-            return false;
+            __internal_list_.insert(pos, __v);
         }
         
-        template <typename _Predicate, typename _InputIterator>
-        bool insert(_Predicate __pred, _InputIterator __f, _InputIterator __l)
+        void insert(std::function<const_iterator(const list_type&)> __pos, size_type __n, const value_type& __v)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_list_.begin(), __internal_list_.end(), __pred);
-            if (it != __internal_list_.end())
-            {
-                __internal_list_.insert(it, __f, __l);
-                return true;
-            }
             
-            return false;
+            const_iterator pos = __pos(__internal_list_);
+            
+            __internal_list_.insert(pos, __n, __v);
         }
         
-        template <typename _Predicate>
-        bool insert(_Predicate __pred, initializer_list<value_type> __il)
+        template <class _InputIterator>
+        void insert(std::function<const_iterator(const list_type&)> __pos, _InputIterator __f, _InputIterator __l)
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
-            const_iterator it = std::find_if(__internal_list_.begin(), __internal_list_.end(), __pred);
-            if (it != __internal_list_.end())
-            {
-                __internal_list_.insert(it, __il);
-                return true;
-            }
             
-            return false;
+            const_iterator pos = __pos(__internal_list_);
+            
+            __internal_list_.insert(pos, __f, __l);
+        }
+        
+        void insert(std::function<const_iterator(const list_type&)> __pos, initializer_list<value_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            const_iterator pos = __pos(__internal_list_);
+            
+            __internal_list_.insert(pos, __il);
         }
         
         void for_each(std::function<void(const value_type&)> __bl)

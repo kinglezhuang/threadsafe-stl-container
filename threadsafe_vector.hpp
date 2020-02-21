@@ -3,7 +3,7 @@
 //  stl_extension
 //
 //  Created by Kingle Zhuang on 11/20/19.
-//  Copyright © 2019 MZD. All rights reserved.
+//  Copyright © 2019 RingCentral. All rights reserved.
 //
 
 #pragma once
@@ -30,6 +30,7 @@ namespace std
         typedef _Tp                                             value_type;
         typedef _Allocator                                      allocator_type;
 
+        typedef          __vector_type                          vector_type;
         typedef typename __vector_type::reference               reference;
         typedef typename __vector_type::const_reference         const_reference;
         typedef typename __vector_type::size_type               size_type;
@@ -45,8 +46,8 @@ namespace std
         threadsafe_vector() : __internal_vector_() {}
         explicit threadsafe_vector(size_type __n) : __internal_vector_(__n) {}
         threadsafe_vector(size_type __n, const value_type& __v) : __internal_vector_(__n, __v) {}
-        threadsafe_vector(const __vector_type& __v) : __internal_vector_(__v) {}
-        threadsafe_vector(__vector_type&& __v) : __internal_vector_(std::move(__v)) {}
+        threadsafe_vector(const vector_type& __v) : __internal_vector_(__v) {}
+        threadsafe_vector(vector_type&& __v) : __internal_vector_(std::move(__v)) {}
         threadsafe_vector(initializer_list<value_type> __il) : __internal_vector_(__il) {}
         
         template <class _InputIterator>
@@ -81,6 +82,12 @@ namespace std
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_vector_.size();
+        }
+        
+        size_type max_size()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_vector_.max_size();
         }
 
         size_type capacity()
@@ -171,6 +178,61 @@ namespace std
         {
             std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
             __internal_vector_[__n] = __v;
+        }
+        
+        void operator=(const vector_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_vector_ = __v;
+        }
+        
+        void operator=(initializer_list<value_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            __internal_vector_ = __il;
+        }
+        
+        value_type value()
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
+            return __internal_vector_;
+        }
+        
+        void insert(std::function<const_iterator(const vector_type&)> __pos, const value_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            const_iterator pos = __pos(__internal_vector_);
+
+            __internal_vector_.insert(pos, __v);
+        }
+        
+        void insert(std::function<const_iterator(const vector_type&)> __pos, size_type __n, const value_type& __v)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            const_iterator pos = __pos(__internal_vector_);
+            
+            __internal_vector_.insert(pos, __n, __v);
+        }
+        
+        template <class _InputIterator>
+        void insert(std::function<const_iterator(const vector_type&)> __pos, _InputIterator __f, _InputIterator __l)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            const_iterator pos = __pos(__internal_vector_);
+            
+            __internal_vector_.insert(pos, __f, __l);
+        }
+        
+        void insert(std::function<const_iterator(const vector_type&)> __pos, initializer_list<value_type> __il)
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(__mutex_);
+            
+            const_iterator pos = __pos(__internal_vector_);
+            
+            __internal_vector_.insert(pos, __il);
         }
         
         void erase(std::function<bool(const value_type&)> __comp)

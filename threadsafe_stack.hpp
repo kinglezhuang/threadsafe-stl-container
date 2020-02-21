@@ -3,7 +3,7 @@
 //  stl_extension
 //
 //  Created by Kingle Zhuang on 11/20/19.
-//  Copyright © 2019 MZD. All rights reserved.
+//  Copyright © 2019 RingCentral. All rights reserved.
 //
 
 #pragma once
@@ -26,6 +26,7 @@ namespace std
         __stack_type __internal_stack_;
         
     public:
+        typedef          __stack_type                  stack_type;
         typedef typename __stack_type::container_type  container_type;
         typedef typename __stack_type::value_type      value_type;
         typedef typename __stack_type::reference       reference;
@@ -34,6 +35,8 @@ namespace std
         
     public:
         threadsafe_stack() : __internal_stack_() {}
+        threadsafe_stack(const stack_type& __s) : __internal_stack_(__s) {}
+        threadsafe_stack(stack_type&& __s) : __internal_stack_(std::move(__s)) {}
         explicit threadsafe_stack(const container_type& __c) : __internal_stack_(__c) {}
         explicit threadsafe_stack(container_type&& __c) : __internal_stack_(std::move(__c)) {}
         
