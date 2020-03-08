@@ -36,7 +36,7 @@ namespace std
     private:
         typedef std::map<key_type, mapped_type, key_compare, allocator_type> __map_type;
     
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __map_type __internal_map_;
     
     public:
@@ -65,19 +65,19 @@ namespace std
         threadsafe_map& operator=(threadsafe_map&&) = delete;
     
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.empty();
         }
     
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.max_size();
@@ -208,7 +208,7 @@ namespace std
     private:
         typedef std::multimap<key_type, mapped_type, key_compare, allocator_type> __map_type;
     
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __map_type __internal_map_;
     
     public:
@@ -237,19 +237,19 @@ namespace std
         threadsafe_multimap& operator=(threadsafe_multimap&&) = delete;
     
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.max_size();

@@ -22,7 +22,7 @@ namespace std
     private:
         typedef std::stack<_Tp, _Container> __stack_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __stack_type __internal_stack_;
         
     public:
@@ -46,13 +46,13 @@ namespace std
         threadsafe_stack& operator=(threadsafe_stack&&) = delete;
         
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_stack_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_stack_.size();

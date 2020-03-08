@@ -36,7 +36,7 @@ namespace std
     private:
         typedef std::set<value_type, value_compare, allocator_type> __set_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __set_type __internal_set_;
         
     public:
@@ -65,19 +65,19 @@ namespace std
         threadsafe_set& operator=(threadsafe_set&&) = delete;
         
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.max_size();
@@ -226,7 +226,7 @@ namespace std
     private:
         typedef std::multiset<value_type, value_compare, allocator_type> __set_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __set_type __internal_set_;
         
     public:
@@ -255,19 +255,19 @@ namespace std
         threadsafe_multiset& operator=(threadsafe_multiset&&) = delete;
         
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.max_size();

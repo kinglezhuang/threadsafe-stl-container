@@ -24,7 +24,7 @@ namespace std
     private:
         typedef std::list<_Tp, _Allocator> __list_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __list_type __internal_list_;
         
     public:
@@ -41,7 +41,7 @@ namespace std
         typedef typename __list_type::iterator                  iterator;
         typedef typename __list_type::const_iterator            const_iterator;
         typedef typename __list_type::reverse_iterator          reverse_iterator;
-        typedef typename __list_type::reverse_iterator          const_reverse_iterator;
+        typedef typename __list_type::const_reverse_iterator    const_reverse_iterator;
         
     public:
         threadsafe_list() : __internal_list_() {}
@@ -79,19 +79,19 @@ namespace std
             __internal_list_.assign(__il);
         }
         
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_list_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_list_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_list_.max_size();

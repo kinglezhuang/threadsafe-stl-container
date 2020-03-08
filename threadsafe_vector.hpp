@@ -23,7 +23,7 @@ namespace std
     private:
         typedef std::vector<_Tp, _Allocator> __vector_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __vector_type __internal_vector_;
         
     public:
@@ -40,7 +40,7 @@ namespace std
         typedef typename __vector_type::iterator                iterator;
         typedef typename __vector_type::const_iterator          const_iterator;
         typedef typename __vector_type::reverse_iterator        reverse_iterator;
-        typedef typename __vector_type::reverse_iterator        const_reverse_iterator;
+        typedef typename __vector_type::const_reverse_iterator  const_reverse_iterator;
         
     public:
         threadsafe_vector() : __internal_vector_() {}
@@ -78,25 +78,25 @@ namespace std
             __internal_vector_.assign(__il);
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_vector_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_vector_.max_size();
         }
 
-        size_type capacity()
+        size_type capacity() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_vector_.capacity();
         }
         
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_vector_.empty();

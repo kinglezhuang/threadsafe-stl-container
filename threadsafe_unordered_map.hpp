@@ -37,7 +37,7 @@ namespace std
 
     private:
         typedef std::unordered_map<key_type, mapped_type, hasher, key_equal, allocator_type> __map_type;
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __map_type __internal_map_;
     
     public:
@@ -48,6 +48,8 @@ namespace std
         typedef typename __map_type::difference_type        difference_type;
         typedef typename __map_type::iterator               iterator;
         typedef typename __map_type::const_iterator         const_iterator;
+        typedef typename __map_type::local_iterator         local_iterator;
+        typedef typename __map_type::const_local_iterator   const_local_iterator;
     
     public:
         threadsafe_unordered_map() : __internal_map_() {}
@@ -64,19 +66,19 @@ namespace std
         threadsafe_unordered_map& operator=(threadsafe_unordered_map&&) = delete;
     
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.max_size();
@@ -208,7 +210,7 @@ namespace std
         
     private:
         typedef std::unordered_multimap<key_type, mapped_type, hasher, key_equal, allocator_type> __map_type;
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __map_type __internal_map_;
         
     public:
@@ -219,6 +221,8 @@ namespace std
         typedef typename __map_type::difference_type        difference_type;
         typedef typename __map_type::iterator               iterator;
         typedef typename __map_type::const_iterator         const_iterator;
+        typedef typename __map_type::local_iterator         local_iterator;
+        typedef typename __map_type::const_local_iterator   const_local_iterator;
         
     public:
         threadsafe_unordered_multimap() : __internal_map_() {}
@@ -235,19 +239,19 @@ namespace std
         threadsafe_unordered_multimap& operator=(threadsafe_unordered_multimap&&) = delete;
         
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_map_.max_size();

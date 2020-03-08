@@ -24,7 +24,7 @@ namespace std
     private:
         typedef std::deque<_Tp, _Allocator> __deque_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __deque_type __internal_queue_;
         
     public:
@@ -41,7 +41,7 @@ namespace std
         typedef typename __deque_type::iterator                 iterator;
         typedef typename __deque_type::const_iterator           const_iterator;
         typedef typename __deque_type::reverse_iterator         reverse_iterator;
-        typedef typename __deque_type::reverse_iterator         const_reverse_iterator;
+        typedef typename __deque_type::const_reverse_iterator   const_reverse_iterator;
         
     public:
         threadsafe_deque() : __internal_queue_() {}
@@ -79,19 +79,19 @@ namespace std
             __internal_queue_.assign(__il);
         }
         
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_queue_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_queue_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_queue_.max_size();

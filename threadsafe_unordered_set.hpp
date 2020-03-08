@@ -37,7 +37,7 @@ namespace std
     private:
         typedef std::unordered_set<value_type, hasher, key_equal, allocator_type> __set_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __set_type __internal_set_;
         
     public:
@@ -66,19 +66,19 @@ namespace std
         threadsafe_unordered_set& operator=(threadsafe_unordered_set&&) = delete;
         
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.max_size();
@@ -260,7 +260,7 @@ namespace std
     private:
         typedef std::unordered_multiset<value_type, hasher, key_equal, allocator_type> __set_type;
         
-        std::shared_timed_mutex __mutex_;
+        mutable std::shared_timed_mutex __mutex_;
         __set_type __internal_set_;
         
     public:
@@ -289,19 +289,19 @@ namespace std
         threadsafe_unordered_multiset& operator=(threadsafe_unordered_multiset&&) = delete;
         
     public:
-        bool empty()
+        bool empty() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.empty();
         }
         
-        size_type size()
+        size_type size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.size();
         }
         
-        size_type max_size()
+        size_type max_size() const
         {
             std::shared_lock<std::shared_timed_mutex> lock(__mutex_);
             return __internal_set_.max_size();
